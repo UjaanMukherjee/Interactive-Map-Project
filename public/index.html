@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    <link rel="shortcut icon" href="">
+    <script src="https://kit.fontawesome.com/7b33ed6c05.js" crossorigin="anonymous"></script>
+    <title>Document</title>
+    <style>
+        html{
+            background-color: #000;;
+        }
+        #map{
+            height: 1080px;
+            width: 80%;
+            margin: 5rem auto;
+        }
+    </style>
+
+</head>
+<body>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js">
+        
+    </script>
+    <h1 style="font-family:Georgia;font-size:60px;color: white; text-align: center">Interactive Map Software</h1>
+    <h2 style="font-family:Georgia;font-size:50px;color: white; text-align: right">By Ujaan Mukherjee</h2>
+    <div id="map"></div>
+    <h1 style="font-family:Georgia;font-size:30px;color: white; text-align: center">Given graph represents the relevance of various events occuring around UAE. The most relevant are given in green, the medium ones in yellow and the least relevant in red. Clicking on the nodes provides relevant information about the nodes.</h1>
+    <script>
+        
+        const apikey = 'pk.eyJ1IjoidWphYW5tIiwiYSI6ImNrdmMzdndhZTAxdzMydW4zbnFnaTF3dXMifQ.RDUfyKruiJZyGeOI12xcPw';
+        const mymap = L.map('map').setView([25.097884, 55.179598], 9);
+        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            maxZoom: 18,
+            id: 'mapbox/dark-v10',
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: apikey
+        }).addTo(mymap);
+        console.log("Send the request");
+        fetch('/eventdata').then(response => response.json())
+        .then(data => {
+            console.log("Heres the response");
+            data = JSON.parse(data);
+            console.log(data);
+            
+            for (marker of data){
+            let location = marker['location'];
+            let title = marker['name'];
+            let category = marker['category'];
+            let description = marker['description'];
+            let attendance = marker['attendance'];
+            let startDate = marker['startDate'];
+            let rank = marker['rank'];
+            location = location.reverse();
+            
+            let markerpoint = L.marker(location).addTo(mymap);
+            markerpoint.bindPopup(`
+                <h3 style = "font-family:georgia,garamond,serif;font-size:22px;font-style:italic;color:#008080">${title}</h3>
+                <p style = "font-family:georgia,garamond,serif;font-size:20px;font-style:italic">${description.length>0?description:"There is no description for this event"}</p>
+                <i class="fas fa-user-friends fa-2x fa-pull-left"></i><p style = "font-family:georgia,garamond,serif;font-size:20px;font-style:italic">${attendance!==null?attendance:"unknown"}</p>
+                <i class="fas fa-signal fa-2x fa-pull-left" style="color:#FF10F0"></i><p style = "font-family:georgia,garamond,serif;font-size:20px;font-style:italic;color:red">Local Rank: ${rank<20?"Minor":rank<40?"Moderate":rank<60?"Important":rank<80?"Significant":"Major"}</p>
+                <i class="fas fa-calendar-alt fa-2x fa-pull-left"style="color:#00008b"></i><p style = "font-family:georgia,garamond,serif;font-size:20px;font-style:italic">${startDate}</p>
+                <p style = "font-family:georgia,garamond,serif;font-size:16px"> Category: ${category}</p>
+            `);
+            let circlecolor = rank>70?'green':rank>40?'yellow':'red';
+            if(attendance!==null){
+                let circlepoint = L.circle(location, {
+                    radius: attendance*2,
+                    color: circlecolor,
+                    fillColor: circlecolor,
+                    fillOpacity: 0.1
+                }).addTo(mymap);
+            }
+            else{
+                let circlepoint = L.circle(location, {
+                    radius: 500,
+                    color: circlecolor,
+                    fillColor: circlecolor,
+                    fillOpacity: 0.1
+                }).addTo(mymap);
+            }
+            
+            }
+        })
+    </script>
+</body>
+</html>
